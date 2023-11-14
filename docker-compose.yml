@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  djangoapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      .env.dev
+    depends_on:
+      - redis
+      - db
+    ports:
+      - 8000:8000
+    #command: bash -c "cd /usr/src/app/ && ./entrypoint.sh && gunicorn app.wsgi:application -b 0.0.0.0:8000"
+    command: bash -c "cd /usr/src/app/ && ./entrypoint.sh && cd app/ && python manage.py runserver 0.0.0.0:8000"
+    
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      .env.dev
+    entrypoint:
+      - /usr/src/app/entrypoint.celery.sh
+    depends_on:
+      - redis
+      - djangoapp
+    #command: bash -c "python manage.py celery_worker"
+    command: bash -c "cd /usr/src/app/app/ && celery -A app worker --loglevel=info"
+  
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  postgres_data:
