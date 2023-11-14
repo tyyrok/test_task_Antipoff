@@ -22,7 +22,6 @@ class CadastralNumberSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Convert `status` to appropriate value."""
         ret = super().to_representation(instance)
-        print(ret)
         if ret['status'] is None:
             ret['status'] = 'Data is still processing, try later'
         return ret
@@ -65,5 +64,11 @@ class HistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = History
         fields = ['request_type', 'timestamp']
+        
+class CadastralHistorySerializer(serializers.ModelSerializer):
+    history_set = HistorySerializer(many=True, read_only=True)
+    class Meta:
+        model = CadastralNumber
+        fields = ['number', 'long', 'alt', 'status', 'history_set']
 
         

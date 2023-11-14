@@ -5,9 +5,9 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 
 from api.serializers import CadastralNumberSerializer, \
-                HistorySerializer
+                CadastralHistorySerializer
 from api.models import CadastralNumber, History
-from api.tasks import mock_request_to_third_party
+from api.tasks import mock_request_to_third_party, make_third_party_request
 
 class QueryView(APIView):
     """POST View for making request with number, long, alt"""
@@ -21,7 +21,8 @@ class QueryView(APIView):
                 request_type='query',
                 number=instance
             )
-            mock_request_to_third_party.delay(instance.id)
+            #mock_request_to_third_party.delay(instance.id) 
+            make_third_party_request.delay(obj_id=instance.id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -46,21 +47,16 @@ class PingView(APIView):
         data = {"data": "pong"}
         return Response(data=data, status=status.HTTP_200_OK)
 
-class HistoryView(ListAPIView):
-    serializer_class = HistorySerializer
+class HistoryView(RetrieveAPIView):
+    serializer_class = CadastralHistorySerializer
     
-    def get_queryset(self):
-        queryset = (
-            History.objects.filter(number__number=self.kwargs['number'])
-                            .order_by('-timestamp')
-        )
-                                
-        if len(queryset) == 0:
-            raise ValidationError(
-                detail={'detail': 'Incorrect number of the object'}
-            )
+    def get_object(self):
+        try:
+            number = CadastralNumber.objects.get(number=self.kwargs['number'])
+        except:
+            raise ValidationError(detail={'detail': 'Incorrect number of the object'})
         History.objects.create(
-            request_type='history', 
-            number=queryset[0].number
+            request_type='history',
+            number=number
         )
-        return queryset
+        return number 
