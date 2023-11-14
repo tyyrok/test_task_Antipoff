@@ -10,23 +10,21 @@ services:
     depends_on:
       - redis
       - db
+    entrypoint:
+      - /usr/src/app/entrypoint.sh
     ports:
       - 8000:8000
-    #command: bash -c "cd /usr/src/app/ && ./entrypoint.sh && gunicorn app.wsgi:application -b 0.0.0.0:8000"
-    command: bash -c "cd /usr/src/app/ && ./entrypoint.sh && cd app/ && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "cd /usr/src/app/app/ && gunicorn app.wsgi:application -b 0.0.0.0:8000"
     
   fastapi:
     build:
-      context: .
+      context: fastapi/
       dockerfile: Dockerfile
     ports:
       - 8001:8001
-    entrypoint:
-      - /usr/src/app/entrypoint.celery.sh
     depends_on:
       - redis
-      - db
-    command: bash -c "cd /usr/src/app/fastapi/ && uvicorn main:app --host 0.0.0.0 --port 8001"
+    command: bash -c "cd /usr/src/app/ && uvicorn main:app --host 0.0.0.0 --port 8001"
     
   db:
     image: postgres:15
@@ -50,7 +48,6 @@ services:
     depends_on:
       - redis
       - djangoapp
-    #command: bash -c "python manage.py celery_worker"
     command: bash -c "cd /usr/src/app/app/ && celery -A app worker --loglevel=info"
   
   redis:

@@ -17,7 +17,7 @@ class QueryView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             instance = serializer.save()
-            record = History.objects.create(
+            History.objects.create(
                 request_type='query',
                 number=instance
             )
