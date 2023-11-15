@@ -14,7 +14,7 @@ services:
       - /usr/src/app/entrypoint.sh
     ports:
       - 8000:8000
-    command: bash -c "cd /usr/src/app/app/ && gunicorn app.wsgi:application -b 0.0.0.0:8000"
+    command: bash -c "cd /usr/src/app/app/ && python manage.py runserver 0.0.0.0:8000"
     
   fastapi:
     build:

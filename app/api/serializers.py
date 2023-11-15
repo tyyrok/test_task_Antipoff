@@ -10,21 +10,14 @@ def number_validator(value):
     return None
 
 def long_alt_validator(value):
-    if re.fullmatch(r"^\d{1,3}.\d{5}$", value):
-            return value
+    if re.fullmatch(r"^\d{1,3}\.\d{5}$", value):
+        return value
     return None
 
 class CadastralNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = CadastralNumber
         fields = ['number', 'long', 'alt', 'status']
-    
-    def to_representation(self, instance):
-        """Convert `status` to appropriate value."""
-        ret = super().to_representation(instance)
-        if ret['status'] is None:
-            ret['status'] = 'Data is still processing, try later'
-        return ret
     
     def validate_number(self, value):
         """Check if number has acceptable format"""
@@ -49,6 +42,13 @@ class CadastralNumberSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError(
             "The alt/long must be in format - '41.40338'"
         )
+        
+    def to_representation(self, instance):
+        """Convert `status` to appropriate value."""
+        ret = super().to_representation(instance)
+        if ret['status'] is None:
+            ret['status'] = 'Data is still processing, try later'
+        return ret
 
 class HistorySerializer(serializers.ModelSerializer):
     class Meta:
